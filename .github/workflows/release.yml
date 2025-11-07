@@ -1,7 +1,6 @@
 name: Continuous Delivery Release
 
 # --- TRIGGER ---
-# Se ejecuta en cada push a la rama 'main'
 on:
   push:
     branches:
@@ -12,7 +11,7 @@ jobs:
     name: Build and Create Release
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Necesario para crear releases y subir assets
+      contents: write
 
     steps:
       - name: Checkout code
@@ -38,7 +37,7 @@ jobs:
           COMMIT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
           # Crea un tag único para la release (ej: v1.0.0-a1b2c3d)
           RELEASE_TAG="v${PROJECT_VERSION%'-SNAPSHOT'}-${COMMIT_SHA}"
-          
+
           echo "PROJECT_VERSION=${PROJECT_VERSION}" >> $GITHUB_OUTPUT
           echo "RELEASE_TAG=${RELEASE_TAG}" >> $GITHUB_OUTPUT
 
@@ -54,7 +53,7 @@ jobs:
           body: |
             Automated release for commit ${{ github.sha }}.
           draft: false
-          prerelease: true # Marcamos la release como "Pre-release"
+          prerelease: true
 
       # --- SUBIDA DEL ARTEFACTO ---
       - name: Upload Release Asset
