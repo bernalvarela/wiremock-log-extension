@@ -1,0 +1,41 @@
+name: CI/CD Release
+
+on:
+  release:
+    types: [published] # This workflow runs when a new release is published on GitHub
+
+jobs:
+  build-and-publish:
+    name: Build and Publish Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # This permission is needed to upload release assets
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'maven'
+
+      - name: Build with Maven
+        run: mvn clean package
+
+      - name: Get project version from pom.xml
+        id: get_version
+        run: echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is automatically provided by GitHub Actions
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./target/wiremock-log-extension-${{ steps.get_version.outputs.PROJECT_VERSION }}.jar
+          asset_name: wiremock-log-extension-${{ steps.get_version.outputs.PROJECT_VERSION }}.jar
+          asset_content_type: application/java-archive
