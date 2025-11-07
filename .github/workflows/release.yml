@@ -1,15 +1,18 @@
-name: CI/CD Release
+name: Continuous Delivery Release
 
+# --- TRIGGER ---
+# Se ejecuta en cada push a la rama 'main'
 on:
-  release:
-    types: [published] # This workflow runs when a new release is published on GitHub
+  push:
+    branches:
+      - main
 
 jobs:
-  build-and-publish:
-    name: Build and Publish Release
+  build-and-release:
+    name: Build and Create Release
     runs-on: ubuntu-latest
     permissions:
-      contents: write # This permission is needed to upload release assets
+      contents: write # Necesario para crear releases y subir assets
 
     steps:
       - name: Checkout code
@@ -25,17 +28,41 @@ jobs:
       - name: Build with Maven
         run: mvn clean package
 
-      - name: Get project version from pom.xml
-        id: get_version
-        run: echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
+      # --- GENERACIÓN DE LA VERSIÓN ---
+      - name: Get Project Version and Commit SHA
+        id: get_vars
+        run: |
+          # Lee la versión del pom.xml (ej: 1.0.0-SNAPSHOT)
+          PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          # Obtiene los 7 primeros caracteres del SHA del commit
+          COMMIT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
+          # Crea un tag único para la release (ej: v1.0.0-a1b2c3d)
+          RELEASE_TAG="v${PROJECT_VERSION%'-SNAPSHOT'}-${COMMIT_SHA}"
+          
+          echo "PROJECT_VERSION=${PROJECT_VERSION}" >> $GITHUB_OUTPUT
+          echo "RELEASE_TAG=${RELEASE_TAG}" >> $GITHUB_OUTPUT
 
+      # --- CREACIÓN DE LA RELEASE ---
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_vars.outputs.RELEASE_TAG }}
+          release_name: Release ${{ steps.get_vars.outputs.RELEASE_TAG }}
+          body: |
+            Automated release for commit ${{ github.sha }}.
+          draft: false
+          prerelease: true # Marcamos la release como "Pre-release"
+
+      # --- SUBIDA DEL ARTEFACTO ---
       - name: Upload Release Asset
-        id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is automatically provided by GitHub Actions
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./target/wiremock-log-extension-${{ steps.get_version.outputs.PROJECT_VERSION }}.jar
-          asset_name: wiremock-log-extension-${{ steps.get_version.outputs.PROJECT_VERSION }}.jar
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./target/wiremock-log-extension-${{ steps.get_vars.outputs.PROJECT_VERSION }}.jar
+          asset_name: wiremock-log-extension-${{ steps.get_vars.outputs.PROJECT_VERSION }}.jar
           asset_content_type: application/java-archive
