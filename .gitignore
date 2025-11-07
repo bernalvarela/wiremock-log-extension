@@ -1,30 +1,52 @@
-### IntelliJ IDEA ###
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-.kotlin
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+.repository/
+.mvn/timing.properties
+# Maven Wrapper
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
 
-### Eclipse ###
-.apt_generated
-.classpath
-.factorypath
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.log
+*.lock
+# Mobile Tools for Java (JMT)
+.mtj.tmp/
+
+# Spring Boot (common patterns, though this project is not strictly Spring Boot)
+/build/
+# Exclude specific files that are part of the project but might be generated
+!/.mvn/wrapper/maven-wrapper.jar
+!/.mvn/wrapper/maven-wrapper.properties
+!/mvnw
+!/mvnw.cmd
+# Exclude build directories within sub-modules (if any)
+!/src/main/**/build/
+!/src/main/**/target/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/ # Visual Studio Code (often used alongside IntelliJ)
+
+# Eclipse
 .project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+.classpath
+.settings/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-### VS Code ###
-.vscode/
-
-### Mac OS ###
+# OS generated files
 .DS_Store
+.Trashes
+Thumbs.db
